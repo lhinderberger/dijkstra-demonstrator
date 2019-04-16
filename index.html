@@ -1,0 +1,47 @@
+<html>
+<head>
+  <title>Dijkstra Demonstrator</title>
+</head>
+
+<body>
+
+  <svg width="300" height="300">
+    <line x1="50" x2="200" y1="50" y2="50" stroke-width="6" stroke="orange" />
+    <line x1="50" x2="200" y1="50" y2="200" stroke-width="2" stroke="black" />
+    <line x1="200" x2="200" y1="50" y2="200" stroke-width="2" stroke="black" />
+
+    <g transform="translate(50, 50)" >
+      <circle r="20" stroke="black" stroke-width="2" fill="white" />
+      <text fill="black" font-family="Arial" dy=".3em" text-anchor="middle" alignment-baseline="central">A</text>
+    </g>
+
+
+    <g transform="translate(200, 50)" >
+      <circle r="20" stroke="black" stroke-width="2" fill="white" />
+      <text fill="black" font-family="Arial" dy=".3em" text-anchor="middle" alignment-baseline="central">B</text>
+    </g>
+
+
+    <g transform="translate(200, 200)" >
+      <circle r="20" stroke="black" stroke-width="2" fill="white" />
+      <text fill="black" font-family="Arial" dy=".3em" text-anchor="middle" alignment-baseline="central">C</text>
+    </g>
+  </svg>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <div id="app">
+    {{ message }}
+  </div>
+  <script type="text/javascript">
+    var app = new Vue({
+      el: '#app',
+      data: {
+        message: 'Hello Vue!'
+      }
+    })
+  </script>
+
+</body>
+</html>
