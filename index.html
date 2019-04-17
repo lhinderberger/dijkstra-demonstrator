@@ -1,45 +1,120 @@
-<html>
+<html lang="en">
 <head>
+  <meta charset="utf-8">
   <title>Dijkstra Demonstrator</title>
 </head>
 
 <body>
+  <script type="text/x-template" id="graph-viewer">
+    <svg :width="width" :height="height">
+      <svg-graph :graph="graph" />
+    </svg>
+  </script>
 
-  <svg width="300" height="300">
-    <line x1="50" x2="200" y1="50" y2="50" stroke-width="6" stroke="orange" />
-    <line x1="50" x2="200" y1="50" y2="200" stroke-width="2" stroke="black" />
-    <line x1="200" x2="200" y1="50" y2="200" stroke-width="2" stroke="black" />
-
-    <g transform="translate(50, 50)" >
-      <circle r="20" stroke="black" stroke-width="2" fill="white" />
-      <text fill="black" font-family="Arial" dy=".3em" text-anchor="middle" alignment-baseline="central">A</text>
+  <script type="text/x-template" id="svg-graph">
+    <g>
+      <line v-for="edge in undirected_edges" :x1="edge.x1" :x2="edge.x2" :y1="edge.y1" :y2="edge.y2" :stroke-width="edge.width" :stroke="edge.color" />
+      <svg-vertex v-for="(vertex, name) in vertices" :key="name" :x="vertex.x" :y="vertex.y" :label="name" />
     </g>
+  </script>
 
-
-    <g transform="translate(200, 50)" >
+  <script type="text/x-template" id="svg-vertex">
+    <g :transform="transform" >
       <circle r="20" stroke="black" stroke-width="2" fill="white" />
-      <text fill="black" font-family="Arial" dy=".3em" text-anchor="middle" alignment-baseline="central">B</text>
+      <text fill="black" font-family="Arial" dy=".3em" text-anchor="middle" alignment-baseline="central">{{ label }}</text>
     </g>
-
-
-    <g transform="translate(200, 200)" >
-      <circle r="20" stroke="black" stroke-width="2" fill="white" />
-      <text fill="black" font-family="Arial" dy=".3em" text-anchor="middle" alignment-baseline="central">C</text>
-    </g>
-  </svg>
+  </script>
 
 
 
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
   <div id="app">
-    {{ message }}
+    <graph-viewer width="300" height="300" :graph="graph" />
   </div>
+
   <script type="text/javascript">
+    function default_graph() {
+      return {
+        directed: false,
+        vertices: {
+          "A": { x: 50, y: 50 },
+          "B": { x: 200, y: 50 },
+          "C": { x: 200, y: 200 }
+        },
+        edges: [
+          { from: "A", to: "B", color: "orange", width: 6 },
+          { from: "B", to: "C" },
+          { from: "C", to: "A" }
+        ]
+      }
+    }
+
+    // Returns the property of an object that belongs to key, or defaultVal, if there is no such property in the object
+    function propertyOrDefault(object, key, defaultVal) {
+      return (object[key] == undefined) ? defaultVal : object[key];
+    }
+
+    Vue.component('svg-vertex', {
+      template: '#svg-vertex',
+      props: ["x", "y", "label"],
+      computed: {
+        transform() {
+          return "translate(" + this.x + "," + this.y + ")";
+        }
+      }
+    })
+
+    Vue.component('svg-graph', {
+      template: '#svg-graph',
+      computed: {
+        vertices() { return this.graph.vertices; },
+        undirected_edges() {
+          var result = [];
+
+          for (var i = 0; i < this.graph.edges.length; i++) {
+            var edge = this.graph.edges[i];
+            result.push({
+              color: propertyOrDefault(edge, "color", "black"),
+              width: propertyOrDefault(edge, "width", 2),
+              ...this.edgeCoordinates(edge)
+            })
+          }
+
+          return result;
+        }
+      },
+      methods: {
+        edgeCoordinates(edge) {
+          var vertexFrom = this.graph.vertices[edge["from"]];
+          var vertexTo = this.graph.vertices[edge["to"]];
+
+          return { x1: vertexFrom["x"], x2: vertexTo["x"], y1: vertexFrom["y"], y2: vertexTo["y"] }
+        },
+      },
+      mounted() {
+        if (this.graph.directed != false)
+          alert("Warning: Directed graphs are not yet supported!");
+      },
+      props: {
+        graph: { type: Object, required: true }
+      }
+    })
+
+    Vue.component('graph-viewer', {
+      template: '#graph-viewer',
+      props: {
+        'width': { type: String, required: true },
+        'height': { type: String, required: true },
+        'graph': { type: Object, required: true }
+      }
+    })
+
     var app = new Vue({
       el: '#app',
-      data: {
-        message: 'Hello Vue!'
-      }
+      data() { return {
+        graph: default_graph()
+      } }
     })
   </script>
 
