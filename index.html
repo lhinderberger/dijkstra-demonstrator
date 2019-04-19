@@ -13,8 +13,15 @@
 
   <script type="text/x-template" id="svg-graph">
     <g>
-      <line v-for="edge in undirected_edges" :x1="edge.x1" :x2="edge.x2" :y1="edge.y1" :y2="edge.y2" :stroke-width="edge.width" :stroke="edge.color" />
-      <svg-vertex v-for="(vertex, name) in vertices" :key="name" :x="vertex.x" :y="vertex.y" :label="name" />
+      <svg-edge v-for="edge in graph.edges" :graph="graph" :edge="edge" />
+      <svg-vertex v-for="(vertex, name) in graph.vertices" :key="name" :x="vertex.x" :y="vertex.y" :label="name" />
+    </g>
+  </script>
+
+  <script type="text/x-template" id="svg-edge">
+    <g :transform="transform">
+        <line :x1="0" :x2="vLength.x" :y1="0" :y2="vLength.y" :stroke-width="width" :stroke="color" />
+        <text fill="black" font-family="Arial" :x="vLength.x / 2" :y="vLength.y / 2" :dx="vWeightOffset.x" :dy="vWeightOffset.y" text-anchor="middle">{{ weight }}</text>
     </g>
   </script>
 
@@ -43,9 +50,9 @@
           "C": { x: 200, y: 200 }
         },
         edges: [
-          { from: "A", to: "B", color: "orange", width: 6 },
-          { from: "B", to: "C" },
-          { from: "C", to: "A" }
+          { from: "A", to: "B", weight: 1, color: "orange", width: 6 },
+          { from: "B", to: "C", weight: 2 },
+          { from: "C", to: "A", weight: 3 }
         ]
       }
     }
@@ -54,6 +61,49 @@
     function propertyOrDefault(object, key, defaultVal) {
       return (object[key] == undefined) ? defaultVal : object[key];
     }
+
+    Vue.component('svg-edge', {
+      template: '#svg-edge',
+      props: ["graph", "edge"],
+      computed: {
+        angle() { // Angle of the edge against the X axis
+          var l = this.vLength
+          return Math.atan(l.y / l.x)
+        },
+        color() {
+          return propertyOrDefault(this.edge, "color", "black")
+        },
+        transform() {
+          var p = this.vPosition
+          return "translate(" + p.x + "," + p.y + ")";
+        },
+        vertexFrom() {
+          return this.graph.vertices[this.edge["from"]]
+        },
+        vertexTo() {
+          return this.graph.vertices[this.edge["to"]]
+        },
+        vLength() { // Length vector
+          var from = this.vertexFrom
+          var to = this.vertexTo
+          return { x: to["x"]-from["x"], y: to["y"]-from["y"] }
+        },
+        vPosition() { // Position vector
+          var from = this.vertexFrom
+          return { x: from["x"], y: from["y"] }
+        },
+        vWeightOffset() {
+          var offset = -10
+          return { x: offset * Math.sin(-this.angle), y: offset * Math.cos(-this.angle) }
+        },
+        weight() {
+          return propertyOrDefault(this.edge, "weight", 0)
+        },
+        width() {
+          return propertyOrDefault(this.edge, "width", 2)
+        }
+      }
+    })
 
     Vue.component('svg-vertex', {
       template: '#svg-vertex',
@@ -67,31 +117,6 @@
 
     Vue.component('svg-graph', {
       template: '#svg-graph',
-      computed: {
-        vertices() { return this.graph.vertices; },
-        undirected_edges() {
-          var result = [];
-
-          for (var i = 0; i < this.graph.edges.length; i++) {
-            var edge = this.graph.edges[i];
-            result.push({
-              color: propertyOrDefault(edge, "color", "black"),
-              width: propertyOrDefault(edge, "width", 2),
-              ...this.edgeCoordinates(edge)
-            })
-          }
-
-          return result;
-        }
-      },
-      methods: {
-        edgeCoordinates(edge) {
-          var vertexFrom = this.graph.vertices[edge["from"]];
-          var vertexTo = this.graph.vertices[edge["to"]];
-
-          return { x1: vertexFrom["x"], x2: vertexTo["x"], y1: vertexFrom["y"], y2: vertexTo["y"] }
-        },
-      },
       mounted() {
         if (this.graph.directed != false)
           alert("Warning: Directed graphs are not yet supported!");
