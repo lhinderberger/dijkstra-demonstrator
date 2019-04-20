@@ -121,14 +121,84 @@
 
             return status
           },
+          dijkstra() {
+            // Find closest vertex
+            var closestVertex = null
+            var closestDistance = Infinity
+            for (var i = 0; i < this.vertex_keys.length; i++) {
+              var key = this.vertex_keys[i]
+
+              if (this.dijkstra_status.visited.includes(key)) // Refactor into function. also below.
+                continue;
+
+              var distance = this.dijkstra_status.distances[key]
+
+              if (distance.distance < closestDistance) {
+                closestVertex = key
+                closestDistance = distance.distance
+              }
+            }
+
+            if (closestDistance == Infinity)
+              return;
+
+            // Push current distances into history
+            this.dijkstra_status.history.push(this.dijkstra_status.distances)
+            this.dijkstra_status.distances = Object.assign({}, this.dijkstra_status.distances)
+
+            // Mark current vertex as visited
+            this.dijkstra_status.visited.push(closestVertex)
+
+            // Look at outgoing edges
+            var outgoing = this.outgoing_edges(closestVertex)
+            for (var i = 0; i < outgoing.length; i++) {
+              var edge = outgoing[i]
+              if (this.dijkstra_status.visited.includes(edge.to))
+                continue;
+
+              var newDistance = closestDistance + edge.weight
+              if (newDistance < this.dijkstra_status.distances[edge.to].distance) {
+                this.dijkstra_status.distances[edge.to] = {
+                  distance: newDistance,
+                  previous: (closestVertex == this.dijkstra_status.start_vertex) ? null : closestVertex
+                }
+              }
+            }
+
+            this.dijkstra()
+          },
           evalIt() {
             eval(this.code)
           },
           init_dijkstra(start_vertex) {
             this.dijkstra_status = this.build_dijkstra_status(start_vertex)
           },
+          outgoing_edges(vertex) {
+            var outgoing = []
+
+            for (var i = 0; i < this.graph.edges.length; i++) {
+              var edge = this.graph.edges[i]
+              if (edge.from == vertex)
+                outgoing.push(edge)
+            }
+
+            if (this.graph.directed == false) {
+              for (var i = 0; i < this.graph.edges.length; i++) {
+                var edge = this.graph.edges[i]
+                if (edge.to == vertex) {
+                  var reversed = Object.assign({}, edge)
+                  reversed.to = edge.from
+                  reversed.from = edge.to
+                  outgoing.push(reversed)
+                }
+              }
+            }
+
+            return outgoing
+          },
           vertex_clicked(vertex) {
             this.init_dijkstra(vertex)
+            this.dijkstra()
           }
         }
       })
