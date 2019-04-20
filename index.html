@@ -2,6 +2,18 @@
 <head>
   <meta charset="utf-8">
   <title>Dijkstra Demonstrator</title>
+
+  <style>
+    .clear { clear: both; }
+
+    .dijkstra-demonstrator { background: #4e4e4e; color: #fff; font-family: sans-serif; padding: 25px; border-radius: 15px; }
+    .map { float: left; margin-right: 50px; }
+    .map-legal { font-size: 8pt; }
+    .map-legal a { color: #fff; }
+
+    .svg-edge text { font-size: 9pt; }
+    .svg-vertex text { font-size: 11pt; }
+  </style>
 </head>
 
 <body>
@@ -9,18 +21,22 @@
   <script src="scripts/common.js"></script>
   <script src="scripts/graph-viewer.js"></script>
 
-  <div id="app">
-    <svg width="400" height="600">
-      <image width="400" height="600" xlink:href="maps/vk2500-l-fg/vk2500-l-fg.png" />
-      <svg-graph :graph="graph"></svg-graph>
-    </svg>
-    <div id="map-legal">
-      Grafisch freigestellter Kartenauszug<br>
-      © GeoBasis-DE / <a href="http://www.bkg.bund.de" target="blank">BKG</a> 2018 (Daten verändert)
+  <div class="dijkstra-demonstrator" id="app">
+    <div class="map">
+      <svg viewBox="0 30 400 540" width="530" height="700">
+        <image width="400" height="600" xlink:href="maps/vk2500-l-fg/vk2500-l-fg.png" />
+        <svg-graph :graph="graph"></svg-graph>
+      </svg>
+      <div class="map-legal">
+        Grafisch freigestellter Kartenauszug | © GeoBasis-DE / <a href="http://www.bkg.bund.de" target="blank">BKG</a> 2018 (Daten verändert)
+      </div>
     </div>
-    <textarea v-model="code1"></textarea>
-    <textarea v-model="code2"></textarea>
-    <button @click="evalIt">Eval Button</button>
+    <div class="controls">
+      <textarea v-model="code1"></textarea>
+      <textarea v-model="code2"></textarea>
+      <button @click="evalIt">Eval Button</button>
+    </div>
+    <div class="clear"></div>
   </div>
 
   <script type="text/javascript">
