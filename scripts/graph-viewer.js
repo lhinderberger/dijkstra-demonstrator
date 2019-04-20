@@ -41,14 +41,14 @@ async function init_graph_viewer() {
                 return { x: from["x"], y: from["y"] }
             },
             vWeightOffset() {
-                var offset = -10
-                return { x: offset * Math.sin(-this.angle), y: offset * Math.cos(-this.angle) }
+                var distance = -1* propertyOrDefault(this.edge, "weightDistance", 10)
+                return { x: distance * Math.sin(-this.angle), y: distance * Math.cos(-this.angle) }
             },
             weight() {
                 return propertyOrDefault(this.edge, "weight", 0)
             },
             width() {
-                return propertyOrDefault(this.edge, "width", 2)
+                return propertyOrDefault(this.edge, "width", 3)
             }
         }
     })
