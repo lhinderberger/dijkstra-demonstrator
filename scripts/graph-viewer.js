@@ -55,10 +55,15 @@ async function init_graph_viewer() {
 
     Vue.component('svg-vertex', {
         template: templates["svg-vertex"],
-        props: ["x", "y", "label"],
+        props: ["clickHandler", "x", "y", "vertexKey", "label"],
         computed: {
             transform() {
                 return "translate(" + this.x + "," + this.y + ")";
+            }
+        },
+        methods: {
+            clicked() {
+                this.clickHandler(this.vertexKey)
             }
         }
     })
@@ -70,7 +75,8 @@ async function init_graph_viewer() {
                 alert("Warning: Directed graphs are not yet supported!");
         },
         props: {
-            graph: { type: Object, required: true }
+            graph: { type: Object, required: true },
+            clickHandler: { type: Function, default: function(vertex) { console.log("Vertex clicked: " + vertex) } }
         }
     })
 
