@@ -10,7 +10,17 @@
   <script src="scripts/graph-viewer.js"></script>
 
   <div id="app">
-    <graph-viewer width="300" height="300" :graph="graph"></graph-viewer>
+    <svg width="400" height="600">
+      <image width="400" height="600" xlink:href="maps/vk2500-l-fg/vk2500-l-fg.png" />
+      <svg-graph :graph="graph"></svg-graph>
+    </svg>
+    <div id="map-legal">
+      Grafisch freigestellter Kartenauszug<br>
+      © GeoBasis-DE / <a href="http://www.bkg.bund.de" target="blank">BKG</a> 2018 (Daten verändert)
+    </div>
+    <textarea v-model="code1"></textarea>
+    <textarea v-model="code2"></textarea>
+    <button @click="evalIt">Eval Button</button>
   </div>
 
   <script type="text/javascript">
@@ -18,14 +28,51 @@
       return {
         directed: false,
         vertices: {
-          "A": { x: 50, y: 50 },
-          "B": { x: 200, y: 50 },
-          "C": { x: 200, y: 200 }
+          "B/P": { x: 325, y: 205 },
+          "D": { x: 43, y: 294 },
+          "DD": { x: 345, y: 303 },
+          "EF": { x: 224, y: 313 },
+          "H": { x: 170, y: 216 },
+          "HB": { x: 126, y: 166 },
+          "HH": { x: 183, y: 135 },
+          "KI": { x: 185, y: 84 },
+          "M": { x: 251, y: 508 },
+          "MD": { x: 250, y: 235 },
+          "MZ": { x: 90, y: 398 },
+          "S": { x: 141, y: 465 },
+          "SB": { x: 41, y: 426 },
+          "SN": { x: 240, y: 132 },
+          "WI": { x: 115, y: 360 },
         },
         edges: [
-          { from: "A", to: "B", weight: 1, color: "orange", width: 6 },
-          { from: "B", to: "C", weight: 2 },
-          { from: "C", to: "A", weight: 3 }
+          { from: "B/P", to: "DD", weight: 195 },
+          { from: "B/P", to: "MD", weight: 155, color: "orange", width: 6 },
+          { from: "B/P", to: "SN", weight: 215 },
+          { from: "D", to: "EF", weight: 400 },
+          { from: "D", to: "H", weight: 280 },
+          { from: "D", to: "HB", weight: 295 },
+          { from: "D", to: "SB", weight: 280 },
+          { from: "D", to: "WI", weight: 205 },
+          { from: "DD", to: "EF", weight: 215 },
+          { from: "DD", to: "M", weight: 459 },
+          { from: "DD", to: "MD", weight: 230 },
+          { from: "EF", to: "MD", weight: 170 },
+          { from: "EF", to: "H", weight: 250 },
+          { from: "EF", to: "M", weight: 415 },
+          { from: "EF", to: "S", weight: 340 },
+          { from: "EF", to: "WI", weight: 280 },
+          { from: "H", to: "HB", weight: 115 },
+          { from: "H", to: "HH", weight: 150 },
+          { from: "H", to: "MD", weight: 145 },
+          { from: "HB", to: "HH", weight: 125 },
+          { from: "HH", to: "KI", weight: 95 },
+          { from: "HH", to: "SN", weight: 110 },
+          { from: "MD", to: "SN", weight: 215 },
+          { from: "MZ", to: "S", weight: 210 },
+          { from: "MZ", to: "SB", weight: 150 },
+          { from: "MZ", to: "WI", weight: 15 },
+          { from: "S", to: "M", weight: 230 },
+          { from: "S", to: "SB", weight: 265 }
         ]
       }
     }
@@ -36,8 +83,16 @@
       var app = new Vue({
         el: '#app',
         data() { return {
+          code1: "var x = 3",
+          code2: "alert(x)",
           graph: default_graph()
-        } }
+        } },
+        methods: {
+          evalIt() {
+            eval(this.code1)
+            eval(this.code2)
+          }
+        }
       })
     }
 
