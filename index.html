@@ -55,9 +55,6 @@
       </div>
     </div>
     <div class="controls">
-      <textarea v-model="code"></textarea>
-      <button @click="evalIt">Eval Button</button>
-
       <table class="dijkstra-table" v-if="dijkstra_status != null">
         <thead>
           <tr>
@@ -88,7 +85,6 @@
       var app = new Vue({
         el: '#app',
         data() { return {
-          code: "alert('Hello World')",
           dijkstra_status: null,
           graph: lhs_graph()
         } },
@@ -166,9 +162,6 @@
             }
 
             this.dijkstra()
-          },
-          evalIt() {
-            eval(this.code)
           },
           init_dijkstra(start_vertex) {
             this.dijkstra_status = this.build_dijkstra_status(start_vertex)
