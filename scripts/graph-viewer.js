@@ -14,7 +14,7 @@ async function init_graph_viewer() {
         template: templates["svg-edge"],
         props: ["graph", "edge"],
         computed: {
-                angle() { // Angle of the edge against the X axis
+            angle() { // Angle of the edge against the X axis
                 var l = this.vLength
                 return Math.atan(l.y / l.x)
             },

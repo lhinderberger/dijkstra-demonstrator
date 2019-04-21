@@ -43,7 +43,7 @@
 
   <script type="text/x-template" id="dijkstra-table-row">
     <tr>
-      <td class="step">Schritt {{ step }}</td>
+      <td class="step">Schritt {{ step+1 }}</td>
       <td v-for="value, key in distances">
         <span v-if="isFinite(value.distance)">{{ value.distance }}<span v-if="value.previous != null"> via {{ value.previous }}</span></span>
         <span v-else>&#8734;</span>
@@ -55,13 +55,14 @@
     <div class="map">
       <svg viewBox="0 30 400 540" width="530" height="700">
         <image width="400" height="600" xlink:href="maps/vk2500-l-fg/vk2500-l-fg.png" />
-        <svg-graph :graph="graph" :click-handler="vertex_clicked"></svg-graph>
+        <svg-graph ref="svg_graph" :graph="graph" :click-handler="vertex_clicked"></svg-graph>
       </svg>
       <div class="map-legal">
         Grafisch freigestellter Kartenauszug | © GeoBasis-DE / <a href="http://www.bkg.bund.de" target="blank">BKG</a> 2018 (Daten verändert)
       </div>
     </div>
     <div class="controls">
+      Verzögerung: <input type="range" min="10" max="5000" v-model="dijkstra_timeout"> {{ dijkstra_timeout }}ms
       <table class="dijkstra-table" v-if="dijkstra_status != null">
         <thead>
           <tr>
@@ -72,7 +73,7 @@
         <tbody>
           <template>
             <dijkstra-table-row v-for="distances, index in dijkstra_status.history" :distances="distances" :step="index"></dijkstra-table-row>
-            <dijkstra-table-row :distances="dijkstra_status.distances" :step="dijkstra_status.history.length + 1"></dijkstra-table-row>
+            <dijkstra-table-row :distances="dijkstra_status.distances" :step="dijkstra_status.history.length"></dijkstra-table-row>
           </template>
         </tbody>
       </table>
@@ -93,6 +94,7 @@
         el: '#app',
         data() { return {
           dijkstra_status: null,
+          dijkstra_timeout: 1000,
           graph: lhs_graph()
         } },
         computed: {
@@ -124,6 +126,14 @@
 
             return status
           },
+          clear_graph_highlights() {
+            for (var key in this.graph.vertices) {
+              if (this.graph.vertices.hasOwnProperty(key))
+                this.graph.vertices[key].class = ""
+            }
+            for (var i = 0; i < this.graph.edges.length; i++)
+              this.graph.edges[i].class = ""
+          },
           dijkstra() {
             // Find closest vertex
             var closestVertex = null
@@ -131,14 +141,14 @@
             for (var i = 0; i < this.vertex_keys.length; i++) {
               var key = this.vertex_keys[i]
 
-              if (this.dijkstra_status.visited.includes(key)) // Refactor into function. also below.
+              if (this.is_vertex_visited(key))
                 continue;
 
-              var distance = this.dijkstra_status.distances[key]
+              var distance = this.dijkstra_status.distances[key].distance
 
-              if (distance.distance < closestDistance) {
+              if (distance < closestDistance) {
                 closestVertex = key
-                closestDistance = distance.distance
+                closestDistance = distance
               }
             }
 
@@ -152,44 +162,71 @@
             // Mark current vertex as visited
             this.dijkstra_status.visited.push(closestVertex)
 
-            // Look at outgoing edges
-            var outgoing = this.outgoing_edges(closestVertex)
-            for (var i = 0; i < outgoing.length; i++) {
-              var edge = outgoing[i]
-              if (this.dijkstra_status.visited.includes(edge.to))
-                continue;
+            // Highlight current vertex as selected
+            this.graph.vertices[closestVertex]["class"] = "selected"
 
-              var newDistance = closestDistance + edge.weight
-              if (newDistance < this.dijkstra_status.distances[edge.to].distance) {
-                this.dijkstra_status.distances[edge.to] = {
-                  distance: newDistance,
-                  previous: (closestVertex == this.dijkstra_status.start_vertex) ? null : closestVertex
+            setTimeout(() => {
+              // Look at outgoing edges
+              var outgoing = this.outgoing_edges(closestVertex)
+              var processEdge = (i) => {
+                if (i >= outgoing.length) {
+                  // Highlight current vertex as visited
+                  this.graph.vertices[closestVertex]["class"] = "visited"
+                  setTimeout(() => { this.dijkstra() }, this.dijkstra_timeout);
+                  return
                 }
-              }
-            }
 
-            this.dijkstra()
+                var edge = outgoing[i]
+
+                this.graph.edges[edge.idx].class = "highlighted" // Highlight edge
+
+                setTimeout(() => {
+                  if (this.is_vertex_visited(edge.to)) {
+                    this.graph.edges[edge.idx].class = "" // Remove highlight
+                    setTimeout(() => { processEdge(i+1) })
+                    return
+                  }
+
+                  var newDistance = closestDistance + edge.weight
+                  if (newDistance < this.dijkstra_status.distances[edge.to].distance) {
+                    this.dijkstra_status.distances[edge.to] = {
+                      distance: newDistance,
+                      previous: (closestVertex == this.dijkstra_status.start_vertex) ? null : closestVertex
+                    }
+                  }
+
+                  this.graph.edges[edge.idx].class = "" // Remove highlight
+                  setTimeout(() => { processEdge(i+1) })
+                }, this.dijkstra_timeout)
+              }
+
+              processEdge(0)
+            }, this.dijkstra_timeout)
           },
           init_dijkstra(start_vertex) {
             this.dijkstra_status = this.build_dijkstra_status(start_vertex)
+          },
+          is_vertex_visited(vertex) {
+            return this.dijkstra_status.visited.includes(vertex)
           },
           outgoing_edges(vertex) {
             var outgoing = []
 
             for (var i = 0; i < this.graph.edges.length; i++) {
-              var edge = this.graph.edges[i]
+              var edge = Object.assign({}, this.graph.edges[i])
+              edge.idx = i
               if (edge.from == vertex)
                 outgoing.push(edge)
             }
 
             if (this.graph.directed == false) {
               for (var i = 0; i < this.graph.edges.length; i++) {
-                var edge = this.graph.edges[i]
+                var edge = Object.assign({}, this.graph.edges[i])
+                edge.idx = i
                 if (edge.to == vertex) {
-                  var reversed = Object.assign({}, edge)
-                  reversed.to = edge.from
-                  reversed.from = edge.to
-                  outgoing.push(reversed)
+                  edge.to = edge.from
+                  edge.from = vertex
+                  outgoing.push(edge)
                 }
               }
             }
@@ -197,6 +234,7 @@
             return outgoing
           },
           vertex_clicked(vertex) {
+            this.clear_graph_highlights()
             this.init_dijkstra(vertex)
             this.dijkstra()
           }
