@@ -44,6 +44,7 @@
   <script type="text/x-template" id="dijkstra-table-row">
     <tr>
       <td class="step">Schritt {{ step+1 }}</td>
+      <td>{{ current_vertex }}</td>
       <td v-for="value, key in distances">
         <span v-if="isFinite(value.distance)">{{ value.distance }}<span v-if="value.previous != null"> via {{ value.previous }}</span></span>
         <span v-else>&#8734;</span>
@@ -67,13 +68,14 @@
         <thead>
           <tr>
             <th></th>
+            <th>Besucht</th>
             <th v-for="key in vertex_keys">{{ key }}</th>
           </tr>
         </thead>
         <tbody>
           <template>
-            <dijkstra-table-row v-for="distances, index in dijkstra_status.history" :distances="distances" :step="index"></dijkstra-table-row>
-            <dijkstra-table-row :distances="dijkstra_status.distances" :step="dijkstra_status.history.length"></dijkstra-table-row>
+            <dijkstra-table-row v-for="history_entry, index in dijkstra_status.history" :distances="history_entry.distances" :current_vertex="history_entry.current_vertex" :step="index"></dijkstra-table-row>
+            <dijkstra-table-row :distances="dijkstra_status.distances" :current_vertex="dijkstra_status.current_vertex" :step="dijkstra_status.history.length"></dijkstra-table-row>
           </template>
         </tbody>
       </table>
@@ -87,7 +89,7 @@
 
       Vue.component('dijkstra-table-row', {
         template: '#dijkstra-table-row',
-        props: ["distances", "step"]
+        props: ["distances", "step", "current_vertex"]
       })
 
       var app = new Vue({
@@ -113,7 +115,8 @@
               visited: [],
               distances: {},
               history: [],
-              start_vertex: start_vertex
+              start_vertex: start_vertex,
+              current_vertex: null
             }
 
             for (var i = 0; i < this.vertex_keys.length; i++) {
@@ -156,10 +159,11 @@
               return;
 
             // Push current distances into history
-            this.dijkstra_status.history.push(this.dijkstra_status.distances)
+            this.dijkstra_status.history.push({ distances: this.dijkstra_status.distances, current_vertex: this.dijkstra_status.current_vertex })
             this.dijkstra_status.distances = Object.assign({}, this.dijkstra_status.distances)
 
-            // Mark current vertex as visited
+            // Mark current vertex as current and visited
+            this.dijkstra_status.current_vertex = closestVertex
             this.dijkstra_status.visited.push(closestVertex)
 
             // Highlight current vertex as selected
