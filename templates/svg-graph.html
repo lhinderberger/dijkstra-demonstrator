@@ -1,4 +1,4 @@
 <g>
     <svg-edge v-for="edge in graph.edges" :graph="graph" :edge="edge" />
-    <svg-vertex v-for="(vertex, name) in graph.vertices" :key="name" :x="vertex.x" :y="vertex.y" :label="name" :vertexKey="name" :clickHandler="clickHandler" />
+    <svg-vertex v-for="(vertex, name) in graph.vertices" :key="name" :vertex="vertex" :vertexKey="name" :clickHandler="clickHandler" />
 </g>

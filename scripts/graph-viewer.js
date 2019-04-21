@@ -55,10 +55,13 @@ async function init_graph_viewer() {
 
     Vue.component('svg-vertex', {
         template: templates["svg-vertex"],
-        props: ["clickHandler", "x", "y", "vertexKey", "label"],
+        props: ["clickHandler", "vertex", "vertexKey"],
         computed: {
+            label() {
+                return (this.vertex.label != undefined) ? this.vertex.label : this.vertexKey
+            },
             transform() {
-                return "translate(" + this.x + "," + this.y + ")";
+                return "translate(" + this.vertex.x + "," + this.vertex.y + ")";
             }
         },
         methods: {
