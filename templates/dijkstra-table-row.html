@@ -1,0 +1,8 @@
+<tr>
+    <td class="step">Schritt {{ step+1 }}</td>
+    <td>{{ current_vertex }}</td>
+    <td v-for="value, key in distances">
+        <span v-if="isFinite(value.distance)">{{ value.distance }}<span v-if="value.previous != null"> via {{ value.previous }}</span></span>
+        <span v-else>&#8734;</span>
+    </td>
+</tr>

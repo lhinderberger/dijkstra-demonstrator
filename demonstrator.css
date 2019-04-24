@@ -1,0 +1,25 @@
+.dijkstra-demonstrator svg { user-select: none; }
+.dijkstra-demonstrator svg text::selection {
+    background: none;
+    color: initial;
+}
+
+.clear { clear: both; }
+
+.dijkstra-table { background: #fff; padding: 20px; border-radius: 10px; }
+.dijkstra-table td { width: 40px; text-align: center; }
+.dijkstra-table .step { width: 70px; }
+
+.map { float: left; margin-right: 50px; }
+.map-legal { font-size: 8pt; text-align: center; }
+
+.svg-edge text { font-size: 9pt; }
+.svg-edge.highlighted line { stroke: red; stroke-width: 6;}
+
+.svg-vertex { cursor: pointer; }
+.svg-vertex circle { fill: white; transition: fill 0.5s; }
+.svg-vertex text { font-size: 11pt; }
+.svg-vertex.highlighted circle { stroke: red; }
+.svg-vertex.selected circle { fill: yellow; }
+.svg-vertex.visited circle { fill: silver; }
+.svg-vertex:hover circle { fill: orange; transition: fill 0.1s; }

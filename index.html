@@ -2,37 +2,7 @@
 <head>
   <meta charset="utf-8">
   <title>Dijkstra Demonstrator</title>
-
-  <style>
-    svg { user-select: none; }
-    svg text::selection {
-      background: none;
-      color: initial;
-    }
-
-    .clear { clear: both; }
-
-    .dijkstra-demonstrator { background: #4e4e4e; color: #fff; font-family: sans-serif; padding: 25px; border-radius: 15px; }
-    
-    .dijkstra-table { background: #fff; padding: 20px; border-radius: 10px; }
-    .dijkstra-table td { width: 40px; text-align: center; }
-    .dijkstra-table .step { width: 70px; }
-    
-    .map { float: left; margin-right: 50px; }
-    .map-legal { font-size: 8pt; text-align: center; }
-    .map-legal a { color: #fff; }
-
-    .svg-edge text { font-size: 9pt; }
-    .svg-edge.highlighted line { stroke: red; stroke-width: 6;}
-
-    .svg-vertex { cursor: pointer; }
-    .svg-vertex circle { fill: white; transition: fill 0.5s; }
-    .svg-vertex text { font-size: 11pt; }
-    .svg-vertex.highlighted circle { stroke: red; }
-    .svg-vertex.selected circle { fill: yellow; }
-    .svg-vertex.visited circle { fill: silver; }
-    .svg-vertex:hover circle { fill: orange; transition: fill 0.1s; }
-  </style>
+  <link rel="stylesheet" href="demonstrator.css">
 </head>
 
 <body>
@@ -40,209 +10,18 @@
   <script src="scripts/common.js"></script>
   <script src="scripts/graph-viewer.js"></script>
   <script src="scripts/lhs-graph.js"></script>
+  <script src="scripts/demonstrator.js"></script>
 
-  <script type="text/x-template" id="dijkstra-table-row">
-    <tr>
-      <td class="step">Schritt {{ step+1 }}</td>
-      <td>{{ current_vertex }}</td>
-      <td v-for="value, key in distances">
-        <span v-if="isFinite(value.distance)">{{ value.distance }}<span v-if="value.previous != null"> via {{ value.previous }}</span></span>
-        <span v-else>&#8734;</span>
-      </td>
-    </tr>
-  </script>
-
-  <div class="dijkstra-demonstrator" id="app">
-    <div class="map">
-      <svg viewBox="0 30 400 540" width="530" height="700">
-        <image width="400" height="600" xlink:href="maps/vk2500-l-fg/vk2500-l-fg.png" />
-        <svg-graph ref="svg_graph" :graph="graph" :click-handler="vertex_clicked"></svg-graph>
-      </svg>
-      <div class="map-legal">
-        Grafisch freigestellter Kartenauszug | © GeoBasis-DE / <a href="http://www.bkg.bund.de" target="blank">BKG</a> 2018 (Daten verändert)
-      </div>
-    </div>
-    <div class="controls">
-      Verzögerung: <input type="range" min="10" max="5000" v-model="dijkstra_timeout"> {{ dijkstra_timeout }}ms
-      <table class="dijkstra-table" v-if="dijkstra_status != null">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Besucht</th>
-            <th v-for="key in vertex_keys">{{ key }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template>
-            <dijkstra-table-row v-for="history_entry, index in dijkstra_status.history" :distances="history_entry.distances" :current_vertex="history_entry.current_vertex" :step="index"></dijkstra-table-row>
-            <dijkstra-table-row :distances="dijkstra_status.distances" :current_vertex="dijkstra_status.current_vertex" :step="dijkstra_status.history.length"></dijkstra-table-row>
-          </template>
-        </tbody>
-      </table>
-    </div>
-    <div class="clear"></div>
+  <div id="app">
+    <dijkstra-demonstrator>
   </div>
 
   <script type="text/javascript">
     async function init() {
-      await init_graph_viewer();
-
-      Vue.component('dijkstra-table-row', {
-        template: '#dijkstra-table-row',
-        props: ["distances", "step", "current_vertex"]
-      })
+      await init_demonstrator()
 
       var app = new Vue({
-        el: '#app',
-        data() { return {
-          dijkstra_status: null,
-          dijkstra_timeout: 1000,
-          graph: lhs_graph()
-        } },
-        computed: {
-          vertex_keys() {
-            var result = []
-            for (var key in this.graph.vertices) {
-              if (this.graph.vertices.hasOwnProperty(key))
-                result.push(key)
-            }
-            return result
-          }
-        },
-        methods: {
-          build_dijkstra_status(start_vertex) {
-            var status = {
-              visited: [],
-              distances: {},
-              history: [],
-              start_vertex: start_vertex,
-              current_vertex: null
-            }
-
-            for (var i = 0; i < this.vertex_keys.length; i++) {
-              var key = this.vertex_keys[i]
-              status.distances[key] = {
-                distance: (key == start_vertex) ? 0 : Infinity,
-                previous: null
-              }
-            }
-
-            return status
-          },
-          clear_graph_highlights() {
-            for (var key in this.graph.vertices) {
-              if (this.graph.vertices.hasOwnProperty(key))
-                this.graph.vertices[key].class = ""
-            }
-            for (var i = 0; i < this.graph.edges.length; i++)
-              this.graph.edges[i].class = ""
-          },
-          dijkstra() {
-            // Find closest vertex
-            var closestVertex = null
-            var closestDistance = Infinity
-            for (var i = 0; i < this.vertex_keys.length; i++) {
-              var key = this.vertex_keys[i]
-
-              if (this.is_vertex_visited(key))
-                continue;
-
-              var distance = this.dijkstra_status.distances[key].distance
-
-              if (distance < closestDistance) {
-                closestVertex = key
-                closestDistance = distance
-              }
-            }
-
-            if (closestDistance == Infinity)
-              return;
-
-            // Push current distances into history
-            this.dijkstra_status.history.push({ distances: this.dijkstra_status.distances, current_vertex: this.dijkstra_status.current_vertex })
-            this.dijkstra_status.distances = Object.assign({}, this.dijkstra_status.distances)
-
-            // Mark current vertex as current and visited
-            this.dijkstra_status.current_vertex = closestVertex
-            this.dijkstra_status.visited.push(closestVertex)
-
-            // Highlight current vertex as selected
-            this.graph.vertices[closestVertex]["class"] = "selected"
-
-            setTimeout(() => {
-              // Look at outgoing edges
-              var outgoing = this.outgoing_edges(closestVertex)
-              var processEdge = (i) => {
-                if (i >= outgoing.length) {
-                  // Highlight current vertex as visited
-                  this.graph.vertices[closestVertex]["class"] = "visited"
-                  setTimeout(() => { this.dijkstra() }, this.dijkstra_timeout);
-                  return
-                }
-
-                var edge = outgoing[i]
-
-                this.graph.edges[edge.idx].class = "highlighted" // Highlight edge
-
-                setTimeout(() => {
-                  if (this.is_vertex_visited(edge.to)) {
-                    this.graph.edges[edge.idx].class = "" // Remove highlight
-                    setTimeout(() => { processEdge(i+1) })
-                    return
-                  }
-
-                  var newDistance = closestDistance + edge.weight
-                  if (newDistance < this.dijkstra_status.distances[edge.to].distance) {
-                    this.dijkstra_status.distances[edge.to] = {
-                      distance: newDistance,
-                      previous: (closestVertex == this.dijkstra_status.start_vertex) ? null : closestVertex
-                    }
-                  }
-
-                  this.graph.edges[edge.idx].class = "" // Remove highlight
-                  setTimeout(() => { processEdge(i+1) })
-                }, this.dijkstra_timeout)
-              }
-
-              processEdge(0)
-            }, this.dijkstra_timeout)
-          },
-          init_dijkstra(start_vertex) {
-            this.dijkstra_status = this.build_dijkstra_status(start_vertex)
-          },
-          is_vertex_visited(vertex) {
-            return this.dijkstra_status.visited.includes(vertex)
-          },
-          outgoing_edges(vertex) {
-            var outgoing = []
-
-            for (var i = 0; i < this.graph.edges.length; i++) {
-              var edge = Object.assign({}, this.graph.edges[i])
-              edge.idx = i
-              if (edge.from == vertex)
-                outgoing.push(edge)
-            }
-
-            if (this.graph.directed == false) {
-              for (var i = 0; i < this.graph.edges.length; i++) {
-                var edge = Object.assign({}, this.graph.edges[i])
-                edge.idx = i
-                if (edge.to == vertex) {
-                  edge.to = edge.from
-                  edge.from = vertex
-                  outgoing.push(edge)
-                }
-              }
-            }
-
-            return outgoing
-          },
-          vertex_clicked(vertex) {
-            this.clear_graph_highlights()
-            this.init_dijkstra(vertex)
-            this.dijkstra()
-          }
-        }
+        el: '#app'
       })
     }
 

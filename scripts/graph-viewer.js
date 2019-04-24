@@ -1,12 +1,3 @@
-async function preload_templates(templatesToFetch) {
-    var templates = {}
-    for (var i = 0; i < templatesToFetch.length; i++) {
-        var tplName = templatesToFetch[i]
-        templates[tplName] = await fetch_template('templates/' + tplName + '.html')
-    }
-    return templates
-}
-
 async function init_graph_viewer() {
     var templates = await preload_templates(["graph-viewer", "svg-edge", "svg-graph", "svg-vertex"])
     
