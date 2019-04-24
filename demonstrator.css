@@ -8,7 +8,7 @@
 
 .dijkstra-table { background: #fff; padding: 20px; border-radius: 10px; }
 .dijkstra-table td { width: 40px; text-align: center; }
-.dijkstra-table .step { width: 70px; }
+.dijkstra-table .dijkstra-table-step { width: 70px; }
 
 .map { float: left; margin-right: 50px; }
 .map-legal { font-size: 8pt; text-align: center; }
